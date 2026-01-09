@@ -1,0 +1,5 @@
+../Driver/Src/stm32_FLASH.c:13:6:Flash_Unlock	4	static
+../Driver/Src/stm32_FLASH.c:22:6:Flash_Lock	4	static
+../Driver/Src/stm32_FLASH.c:27:6:Flash_EraseSector	16	static
+../Driver/Src/stm32_FLASH.c:46:6:Flash_EraseMass	8	static
+../Driver/Src/stm32_FLASH.c:63:6:ProgramWord	16	static

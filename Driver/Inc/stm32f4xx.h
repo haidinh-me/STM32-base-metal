@@ -10,12 +10,19 @@
 
 #include <stdint.h>
 
+/* following defines should be used for structure members */
+#define     __IM     volatile const      /*! Defines 'read only' structure member permissions */
+#define     __OM     volatile            /*! Defines 'write only' structure member permissions */
+#define     __IOM    volatile            /*! Defines 'read / write' structure member permissions */
+
 // SYSCFG_R
 #define FLASH_BASEADDR			0x08000000U
 #define SRAM1_BASEADDR			0x20000000U
 #define SRAM2_BASEADDR			0x20001C00U		//SRAM2=SRAM2_BASEADDR + size(SRAM2_BASEADDR);
 #define ROM_BASEADDR			0x1FFF0000U
 #define SRAM 					SRAM1_BASEADDR
+#define MPU_BASEADDR			0xE000ED90U
+#define SCB_BASEADDR			0xE000ED00U
 
 // NVIC
 #define NVIC_ISER_BASEADDR      (volatile uint32_t *)0xE000E100U
@@ -43,6 +50,8 @@
 #define GPIOE_BASEADDR			(AHB1PERIPHERAL_BASEADDR + 0x1000U)
 #define GPIOH_BASEADDR			(AHB1PERIPHERAL_BASEADDR + 0x1C00U)
 #define RCC_BASEADDR			(AHB1PERIPHERAL_BASEADDR + 0x3800U)
+#define DMA1_BASEADDR			(AHB1PERIPHERAL_BASEADDR + 0x6000U)
+#define DMA2_BASEADDR			(AHB1PERIPHERAL_BASEADDR + 0x6400U)
 
 // APB1 PERIPHERAL
 #define I2C1_BASEADDR			(APB1PERIPHERAL_BASEADDR + 0x5400U)
@@ -59,6 +68,77 @@
 #define SPI4_BASEADDR			(APB2PERIPHERAL_BASEADDR + 0x3400U)
 #define EXTI_BASEADDR			(APB2PERIPHERAL_BASEADDR + 0x3C00U)
 #define SYSCFG_BASEADDR			(APB2PERIPHERAL_BASEADDR + 0x3800U)
+
+// Configuration DMA Structure
+typedef struct{
+	volatile uint32_t LISR;					//low interrupt status register
+	volatile uint32_t HISR;					//high interrupt status register
+	volatile uint32_t LIFCR;				//low interrupt flag clear register
+	volatile uint32_t HIFCR;				//high interrupt flag clear register
+	struct{
+		volatile uint32_t SCR;				//stream xconfiguration register
+		volatile uint32_t SNDTR;			//stream x number of data register
+		volatile uint32_t SPAR;				//stream x peripheral address register
+		volatile uint32_t SMxAR[2];			//stream x memory x address register
+		volatile uint32_t SFCR;				//stream x FIFO control register
+	}STREAM[8];								//stream x
+}DMA_Register_t;
+#define DMA1	((DMA_Register_t *)DMA1_BASEADDR)
+#define DMA2	((DMA_Register_t *)DMA2_BASEADDR)
+
+//Configuration SBS Structure
+
+typedef struct{
+	__IM  uint32_t CPUID;                  /*!< Offset: 0x000 (R/ )  CPUID Base Register */
+	__IOM uint32_t ICSR;                   /*!< Offset: 0x004 (R/W)  Interrupt Control and State Register */
+	__IOM uint32_t VTOR;                   /*!< Offset: 0x008 (R/W)  Vector Table Offset Register */
+	__IOM uint32_t AIRCR;                  /*!< Offset: 0x00C (R/W)  Application Interrupt and Reset Control Register */
+	__IOM uint32_t SCR;                    /*!< Offset: 0x010 (R/W)  System Control Register */
+	__IOM uint32_t CCR;                    /*!< Offset: 0x014 (R/W)  Configuration Control Register */
+	__IOM uint8_t  SHP[12U];               /*!< Offset: 0x018 (R/W)  System Handlers Priority Registers (4-7, 8-11, 12-15) */
+	__IOM uint32_t SHCSR;                  /*!< Offset: 0x024 (R/W)  System Handler Control and State Register */
+	__IOM uint32_t CFSR;                   /*!< Offset: 0x028 (R/W)  Configurable Fault Status Register */
+	__IOM uint32_t HFSR;                   /*!< Offset: 0x02C (R/W)  HardFault Status Register */
+	__IOM uint32_t DFSR;                   /*!< Offset: 0x030 (R/W)  Debug Fault Status Register */
+	__IOM uint32_t MMFAR;                  /*!< Offset: 0x034 (R/W)  MemManage Fault Address Register */
+	__IOM uint32_t BFAR;                   /*!< Offset: 0x038 (R/W)  BusFault Address Register */
+	__IOM uint32_t AFSR;                   /*!< Offset: 0x03C (R/W)  Auxiliary Fault Status Register */
+	__IM  uint32_t PFR[2U];                /*!< Offset: 0x040 (R/ )  Processor Feature Register */
+	__IM  uint32_t DFR;                    /*!< Offset: 0x048 (R/ )  Debug Feature Register */
+	__IM  uint32_t ADR;                    /*!< Offset: 0x04C (R/ )  Auxiliary Feature Register */
+	__IM  uint32_t MMFR[4U];               /*!< Offset: 0x050 (R/ )  Memory Model Feature Register */
+	__IM  uint32_t ISAR[5U];               /*!< Offset: 0x060 (R/ )  Instruction Set Attributes Register */
+	uint32_t RESERVED0[5U];
+	__IOM uint32_t CPACR;                  /*!< Offset: 0x088 (R/W)  Coprocessor Access Control Register */
+}SCB_Register_t;
+#define SCB	((SCB_Register_t*) SCB_BASEADDR)
+
+//Configuration FLASH Structure
+typedef struct{
+	volatile uint32_t ACR;
+	volatile uint32_t KEYR;
+	volatile uint32_t OPTKEYR;
+	volatile uint32_t SR;
+	volatile uint32_t CR;
+	volatile uint32_t OPTCR;
+}FLASH_Register_t;
+#define FLASH ((FLASH_Register_t *) FLASH_BASEADDR)
+
+//Configuration MPU Structure
+typedef struct{
+	__IM  uint32_t TYPE;                   /*!< Offset: 0x000 (R/ )  MPU Type Register */
+	__IOM uint32_t CTRL;                   /*!< Offset: 0x004 (R/W)  MPU Control Register */
+	__IOM uint32_t RNR;                    /*!< Offset: 0x008 (R/W)  MPU Region RNRber Register */
+	__IOM uint32_t RBAR;                   /*!< Offset: 0x00C (R/W)  MPU Region Base Address Register */
+	__IOM uint32_t RASR;                   /*!< Offset: 0x010 (R/W)  MPU Region Attribute and Size Register */
+	__IOM uint32_t RBAR_A1;                /*!< Offset: 0x014 (R/W)  MPU Alias 1 Region Base Address Register */
+	__IOM uint32_t RASR_A1;                /*!< Offset: 0x018 (R/W)  MPU Alias 1 Region Attribute and Size Register */
+	__IOM uint32_t RBAR_A2;                /*!< Offset: 0x01C (R/W)  MPU Alias 2 Region Base Address Register */
+	__IOM uint32_t RASR_A2;                /*!< Offset: 0x020 (R/W)  MPU Alias 2 Region Attribute and Size Register */
+	__IOM uint32_t RBAR_A3;                /*!< Offset: 0x024 (R/W)  MPU Alias 3 Region Base Address Register */
+	__IOM uint32_t RASR_A3;                /*!< Offset: 0x028 (R/W)  MPU Alias 3 Region Attribute and Size Register */
+}MPU_Register_t;
+#define MPU	((MPU_Register_t* )MPU_BASEADDR)
 
 // Configuration GPIO Structure
 typedef struct{
@@ -185,6 +265,14 @@ typedef struct{
  *	Clock enable Macros for SystemConfig
  */
 #define SYSCFG_CLK_EN() (RCC->APB2ENR |= (1 << 14))
+
+/*
+ * 	Clock enable Macros for DMA
+ */
+#define DMA1EN_MASK		21
+#define DMA2EN_MASK		22
+#define DMA1_PCLK_EN()	(RCC->AHB1ENR |= (1 << DMA1EN_MASK))
+#define DMA2_PCLK_EN()	(RCC->AHB1ENR |= (1 << DMA2EN_MASK))
 
 /*
  *	Clock enable Macros for GPIOx peripheral
